@@ -3,340 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Misión Caos: Uruguay</title>
-    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@400;900&display=swap" rel="stylesheet">
+    <title>¿Quién Soy Yo?</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Roboto:wght@400;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --edu-color: #00d2ff;  /* Azul Neón */
-            --dani-color: #ff0099; /* Rosa Neón */
-            --vicky-color: #ffee00;/* Amarillo Neón */
-            --bg-dark: #121212;
+            --bg-color: #2c3e50;
+            --card-bg: #ecf0f1;
+            --green: #2ecc71;
+            --red: #e74c3c;
+            --blue: #3498db;
+            --yellow: #f1c40f;
         }
 
-        * { box-sizing: border-box; touch-action: manipulation; }
+        * { box-sizing: border-box; touch-action: manipulation; user-select: none; }
 
         body {
             margin: 0; padding: 0;
-            background-color: var(--bg-dark);
-            color: white;
-            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            font-family: 'Fredoka One', cursive;
             overflow: hidden;
             height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
         }
 
-        /* --- PANTALLAS --- */
+        /* PANTALLAS */
         .screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: radial-gradient(circle, #222 0%, #000 100%);
-            transition: opacity 0.5s;
-            padding: 20px; text-align: center;
+            transition: transform 0.3s ease-in-out;
+            background: radial-gradient(circle at center, #34495e 0%, #2c3e50 100%);
+            padding: 20px;
+            text-align: center;
         }
-        .hidden { opacity: 0; pointer-events: none; z-index: -1; }
-        .active { opacity: 1; pointer-events: all; z-index: 10; }
+        .hidden { transform: translateY(100vh); pointer-events: none; }
+        .active { transform: translateY(0); }
 
-        /* --- TIPOGRAFÍA --- */
+        /* INICIO */
         h1 {
-            font-family: 'Black Ops One', cursive;
-            font-size: 3rem; margin: 0;
-            color: #fff;
-            text-shadow: 0 0 15px rgba(255,255,255,0.5);
-            animation: pulseTitle 2s infinite;
+            color: var(--yellow); font-size: 3rem; margin-bottom: 10px;
+            text-shadow: 4px 4px 0 #000; letter-spacing: 2px;
         }
-
-        .player-name {
-            font-family: 'Black Ops One', cursive;
-            font-size: 4rem; margin: 10px 0;
-            text-shadow: 0 0 20px currentColor;
-        }
-
-        .task-text {
-            font-size: 1.8rem; font-weight: 900;
-            margin: 20px 0; line-height: 1.2;
-            color: #fff;
-            min-height: 100px; /* Evita saltos de layout */
-            display: flex; align-items: center; justify-content: center;
-        }
-
-        /* --- TEMPORIZADOR --- */
-        #timer-display {
-            font-family: 'Black Ops One', cursive;
-            font-size: 6rem;
-            color: #ff3333;
-            text-shadow: 0 0 30px #ff0000;
-            margin: 10px 0;
-        }
-        .timer-warning { animation: shake 0.5s infinite; color: #ff0000 !important; }
-
-        /* --- BOTONES --- */
-        .btn-big {
-            background: transparent;
-            border: 4px solid white;
-            color: white;
-            font-family: 'Black Ops One', cursive;
-            font-size: 2rem;
-            padding: 20px 40px;
-            border-radius: 20px;
-            margin-top: 20px;
-            cursor: pointer;
-            box-shadow: 0 0 20px rgba(255,255,255,0.2);
-            transition: transform 0.1s;
-            width: 100%; max-width: 300px;
-        }
-        .btn-big:active { transform: scale(0.95); }
-
-        .btn-success { border-color: #39ff14; color: #39ff14; box-shadow: 0 0 20px #39ff14; }
-        .btn-fail { border-color: #ff0055; color: #ff0055; box-shadow: 0 0 20px #ff0055; }
-
-        /* --- MARCADOR --- */
-        #scoreboard {
-            position: absolute; top: 0; left: 0; width: 100%;
-            display: flex; justify-content: space-around;
-            padding: 10px; background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(5px);
-            z-index: 100;
-        }
-        .score-box { text-align: center; font-weight: bold; }
-        .score-box span { display: block; font-size: 1.5rem; font-family: 'Black Ops One'; }
         
-        @keyframes pulseTitle { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+        .btn-start {
+            background: var(--green); color: white; border: none;
+            padding: 20px 50px; font-size: 2rem; border-radius: 50px;
+            box-shadow: 0 10px 0 #27ae60; cursor: pointer; margin-top: 30px;
+            font-family: 'Fredoka One'; transition: transform 0.1s;
+        }
+        .btn-start:active { transform: translateY(5px); box-shadow: 0 5px 0 #27ae60; }
+
+        /* JUEGO */
+        #game-area {
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+            background: white;
+        }
+
+        #top-bar {
+            height: 80px; background: #333; color: white;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; font-size: 2rem;
+        }
+
+        #card-display {
+            flex-grow: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: var(--card-bg); position: relative;
+            border-bottom: 10px solid #bdc3c7;
+        }
+
+        #word-emoji { font-size: 8rem; margin: 0; line-height: 1; }
+        #word-text { font-size: 3.5rem; margin: 20px 0; color: #2c3e50; text-transform: uppercase; }
+
+        /* Zonas de Toque (Botones invisibles gigantes) */
+        #controls {
+            height: 30%; display: flex; width: 100%;
+        }
+        .touch-zone {
+            width: 50%; height: 100%; display: flex;
+            align-items: center; justify-content: center;
+            font-size: 2rem; color: white; cursor: pointer;
+        }
+        #btn-pass { background-color: var(--red); border-top: 5px solid #c0392b; }
+        #btn-correct { background-color: var(--green); border-top: 5px solid #27ae60; }
+
+        /* INSTRUCCIONES */
+        .instruction-box {
+            background: white; color: #333; padding: 20px; border-radius: 20px;
+            font-family: 'Roboto'; font-size: 1.2rem; max-width: 400px;
+        }
+
+        /* RESULTADOS */
+        .score-list {
+            list-style: none; padding: 0; width: 100%; max-width: 400px;
+        }
+        .score-item {
+            background: rgba(255,255,255,0.1); margin: 10px 0; padding: 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-radius: 10px; color: white; font-size: 1.5rem;
+        }
+
+        /* Animaciones */
+        @keyframes pop { 0% { transform: scale(0.5); opacity:0; } 70% { transform: scale(1.1); } 100% { transform: scale(1); opacity:1;} }
+        .pop-in { animation: pop 0.3s forwards; }
 
     </style>
 </head>
 <body>
 
-    <div id="scoreboard">
-        <div class="score-box" style="color: var(--edu-color)">EDU<br><span id="score-edu">0</span></div>
-        <div class="score-box" style="color: var(--vicky-color)">VICKY<br><span id="score-vicky">0</span></div>
-        <div class="score-box" style="color: var(--dani-color)">DANI<br><span id="score-dani">0</span></div>
-    </div>
-
-    <div id="screen-start" class="screen active">
-        <h1>MISIÓN<br>CAOS</h1>
-        <p style="font-size: 1.2rem; color: #aaa;">Edición Uruguay</p>
-        <div style="font-size: 4rem; margin: 20px;">🇺🇾</div>
-        <button class="btn-big" onclick="initGame()">¡A JUGAR!</button>
-    </div>
-
-    <div id="screen-roulette" class="screen hidden">
-        <h2 style="color:white;">EL TURNO ES DE...</h2>
-        <div id="roulette-name" class="player-name" style="color: white;">...</div>
-    </div>
-
-    <div id="screen-mission" class="screen hidden">
-        <div id="mission-player" class="player-name">EDU</div>
-        <div style="font-size: 1.2rem; color:#aaa; text-transform: uppercase;">Misión:</div>
-        <div id="mission-text" class="task-text">...</div>
+    <div id="screen-menu" class="screen active">
+        <h1>¿QUIÉN<br>SOY?</h1>
+        <div style="font-size: 4rem;">🤔💭🎭</div>
         
-        <div id="timer-display">30</div>
+        <div class="instruction-box">
+            <p>1. El juego elige un jugador.</p>
+            <p>2. Ponte el celular en la <b>FRENTE</b> mirando a los demás.</p>
+            <p>3. ¡Los demás hacen mímica!</p>
+            <p>4. Toca la pantalla: <br>🟥 IZQUIERDA = PASAR<br>🟩 DERECHA = ¡ACERTASTE!</p>
+        </div>
 
-        <div id="action-buttons" style="display:none; width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <button class="btn-big btn-success" onclick="missionResult(true)">¡LISTO! 😎</button>
-            <button class="btn-big btn-fail" onclick="missionResult(false)">NO LLEGUÉ 😭</button>
+        <button class="btn-start" onclick="startGameLoop()">JUGAR</button>
+    </div>
+
+    <div id="screen-prep" class="screen hidden" style="background: var(--blue);">
+        <h2 style="color:white; font-size: 2rem;">TURNO DE:</h2>
+        <h1 id="prep-player" style="font-size: 4rem; margin: 0; color: white;">...</h1>
+        <p style="color:white; font-size: 1.5rem; margin-top: 20px;">Ponte el celular en la frente...</p>
+        <button class="btn-start" style="background: white; color: var(--blue);" onclick="startRound()">¡LISTO!</button>
+    </div>
+
+    <div id="screen-game" class="screen hidden" style="padding: 0;">
+        <div id="game-area">
+            <div id="top-bar">
+                <span id="game-player">EDU</span>
+                <span id="timer">60</span>
+            </div>
+            
+            <div id="card-display">
+                <div id="word-emoji">❓</div>
+                <div id="word-text">PREPARADOS...</div>
+            </div>
+
+            <div id="controls">
+                <div id="btn-pass" class="touch-zone" onclick="handleAnswer(false)">
+                    PASO 👎
+                </div>
+                <div id="btn-correct" class="touch-zone" onclick="handleAnswer(true)">
+                    ¡SÍ! 👍
+                </div>
+            </div>
         </div>
     </div>
 
+    <div id="screen-score" class="screen hidden">
+        <h1>¡TIEMPO!</h1>
+        <h2 style="color: var(--yellow);">Puntos de la ronda: <span id="round-score">0</span></h2>
+        
+        <ul class="score-list">
+            <li class="score-item">
+                <span>EDU 👨🏻</span> <span id="total-edu">0</span>
+            </li>
+            <li class="score-item">
+                <span>DANI 👩🏻</span> <span id="total-dani">0</span>
+            </li>
+            <li class="score-item">
+                <span>VICKY 👧🏼</span> <span id="total-vicky">0</span>
+            </li>
+        </ul>
+
+        <button class="btn-start" onclick="startGameLoop()">SIGUIENTE</button>
+    </div>
+
     <script>
-        // --- CONFIGURACIÓN DE PRENDAS (SIN EJERCICIOS) ---
-        const players = {
-            'Edu': {
-                color: 'var(--edu-color)',
-                tasks: [
-                    { t: "¡Trae el mate de la cocina!", time: 30 },
-                    { t: "¡Trae un rollo de papel higiénico!", time: 25 },
-                    { t: "¡Trae el control remoto de la tele!", time: 25 },
-                    { t: "¡Busca un par de medias (calcetines)!", time: 25 },
-                    { t: "¡Hacé una cara muy fea!", time: 10 },
-                    { t: "Canta una canción de cancha.", time: 20 },
-                    { t: "Trae un vaso con agua.", time: 30 },
-                    { t: "Imitá a un perro ladrando.", time: 10 }
-                ]
-            },
-            'Dani': {
-                color: 'var(--dani-color)',
-                tasks: [
-                    { t: "¡Trae tu perfume favorito!", time: 30 },
-                    { t: "¡Busca una cuchara chica!", time: 25 },
-                    { t: "¡Trae un champión (zapatilla)!", time: 25 },
-                    { t: "¡Trae las llaves de la casa!", time: 30 },
-                    { t: "Dale un abrazo fuerte a Vicky.", time: 15 },
-                    { t: "Baila como una loca por 10 segundos.", time: 15 },
-                    { t: "Trae una fruta de la cocina.", time: 25 },
-                    { t: "Hacé como si estuvieras manejando un auto.", time: 15 }
-                ]
-            },
-            'Vicky': {
-                color: 'var(--vicky-color)',
-                tasks: [
-                    { t: "¡Trae tu peluche preferido!", time: 30 },
-                    { t: "¡Busca una almohada!", time: 30 },
-                    { t: "¡Trae un dibujo tuyo!", time: 40 },
-                    { t: "¡Tocale la nariz a Papá!", time: 15 },
-                    { t: "¡Tocale la oreja a Mamá!", time: 15 },
-                    { t: "Hacé ruido de león: ¡Grrr!", time: 10 },
-                    { t: "Saltá 5 veces bien alto.", time: 15 },
-                    { t: "Escondete atrás del sillón.", time: 15 },
-                    { t: "Trae una chinela (ojota).", time: 30 }
-                ]
-            }
-        };
+        // --- BASE DE DATOS DE PALABRAS ---
+        // Mezclamos cosas fáciles para Vicky y cosas de Uruguay para los papás
+        const dictionary = [
+            // Animales
+            { w: "PERRO", e: "🐶" }, { w: "GATO", e: "🐱" }, { w: "LEÓN", e: "🦁" },
+            { w: "MONO", e: "🐵" }, { w: "VACA", e: "🐮" }, { w: "CHANCHO", e: "🐷" },
+            { w: "DINOSAURIO", e: "🦖" }, { w: "UNICORNIO", e: "🦄" }, { w: "MARIPOSA", e: "🦋" },
+            { w: "ARAÑA", e: "🕷️" }, { w: "CARPINCHO", e: "🦦" }, { w: "TERO", e: "🦅" },
+            { w: "MULITA", e: "🐁" }, { w: "SAPO", e: "🐸" },
+            
+            // Comida
+            { w: "MATE", e: "🧉" }, { w: "PIZZA", e: "🍕" }, { w: "HELADO", e: "🍦" },
+            { w: "BANANA", e: "🍌" }, { w: "ASADO", e: "🥩" }, { w: "TORTA FRITA", e: "🫓" },
+            { w: "DULCE DE LECHE", e: "🍯" }, { w: "CHIVITO", e: "🍔" },
+            
+            // Personajes & Cosas
+            { w: "PRINCESA", e: "👸" }, { w: "FANTASMA", e: "👻" }, { w: "ROBOT", e: "🤖" },
+            { w: "ZOMBIE", e: "🧟" }, { w: "BEBÉ", e: "👶" }, { w: "ABUELA", e: "👵" },
+            { w: "POLICÍA", e: "👮" }, { w: "PELOTA", e: "⚽" }, { w: "TAMBORIL", e: "🥁" },
+            { w: "AUTO", e: "🚗" }, { w: "AVIÓN", e: "✈️" }, { w: "SOL", e: "☀️" },
+            
+            // Acciones / Uruguayismos
+            { w: "BAILANDO", e: "💃" }, { w: "DURMIENDO", e: "😴" }, { w: "LLORANDO", e: "😭" },
+            { w: "TOMANDO MATE", e: "🧉" }, { w: "FÚTBOL", e: "⚽" }, { w: "PLAYA", e: "🏖️" },
+            { w: "FRÍO", e: "🥶" }, { w: "CALOR", e: "🥵" }, { w: "BAÑARSE", e: "🚿" }
+        ];
 
-        const scores = { 'Edu': 0, 'Dani': 0, 'Vicky': 0 };
-        let currentPlayer = '';
-        let lastPlayer = ''; // Para evitar repeticiones
+        // --- ESTADO DEL JUEGO ---
+        const players = ["EDU", "DANI", "VICKY"];
+        let scores = { "EDU": 0, "DANI": 0, "VICKY": 0 };
+        let currentPlayerIdx = 0; // Empieza Edu (luego rotamos)
+        let currentRoundScore = 0;
         let timerInterval;
-        let audioCtx;
-        const synth = window.speechSynthesis; // Voz del navegador
-
-        // --- SISTEMA DE AUDIO ---
-        function initAudio() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function playTone(type) {
-            if (!audioCtx) return;
+        let timeLeft = 60;
+        let usedWords = [];
+        let currentWord = {};
+        
+        // --- AUDIO ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
             const now = audioCtx.currentTime;
 
-            if(type === 'tick') {
-                osc.type = 'square'; osc.frequency.setValueAtTime(800, now);
-                gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now); osc.stop(now + 0.1);
-            } else if (type === 'alarm') {
-                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(600, now); osc.frequency.linearRampToValueAtTime(100, now + 0.5);
-                gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now + 0.5);
-                osc.start(now); osc.stop(now + 0.5);
-            } else if (type === 'spin') {
-                 osc.type = 'sine'; osc.frequency.value = 200 + Math.random()*400;
-                 gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                 osc.start(now); osc.stop(now + 0.1);
+            if (type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, now);
+                osc.frequency.setValueAtTime(1200, now + 0.1);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'pass') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'tick') {
+                osc.type = 'square';
+                osc.frequency.value = 800;
+                gain.gain.setValueAtTime(0.05, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                osc.start(now); osc.stop(now + 0.05);
+            } else if (type === 'end') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.linearRampToValueAtTime(300, now + 1);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 1);
+                osc.start(now); osc.stop(now + 1);
             }
         }
 
-        function speak(text) {
-            if (synth.speaking) synth.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'es-ES'; // Intenta español genérico
-            utterance.rate = 1.0;
-            utterance.pitch = 1.1;
-            synth.speak(utterance);
-        }
-
-        // --- LÓGICA DEL JUEGO ---
+        // --- NAVEGACIÓN ---
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => {
-                s.classList.remove('active'); s.classList.add('hidden');
+                s.classList.remove('active');
+                s.classList.add('hidden');
             });
             document.getElementById(id).classList.remove('hidden');
             document.getElementById(id).classList.add('active');
         }
 
-        function initGame() {
-            initAudio();
-            // Truco para despertar la voz en móviles (necesita interacción usuario)
-            const blank = new SpeechSynthesisUtterance('');
-            synth.speak(blank);
-            spinRoulette();
+        // --- LÓGICA ---
+
+        function startGameLoop() {
+            // Determinar jugador
+            const player = players[currentPlayerIdx];
+            document.getElementById('prep-player').innerText = player;
+            showScreen('screen-prep');
+            
+            // Voz
+            const utterance = new SpeechSynthesisUtterance(`Turno de ${player}. Ponte el celular en la frente.`);
+            utterance.lang = 'es-ES';
+            window.speechSynthesis.speak(utterance);
         }
 
-        function spinRoulette() {
-            showScreen('screen-roulette');
-            const names = ['Edu', 'Dani', 'Vicky'];
-            const el = document.getElementById('roulette-name');
-            let counter = 0;
-            let maxSpins = 20;
+        function startRound() {
+            currentRoundScore = 0;
+            timeLeft = 60;
+            document.getElementById('timer').innerText = timeLeft;
+            document.getElementById('game-player').innerText = players[currentPlayerIdx];
             
-            const interval = setInterval(() => {
-                playTone('spin');
-                let randomName;
-                
-                // Lógica visual de ruleta
-                randomName = names[Math.floor(Math.random() * names.length)];
-                el.innerText = randomName;
-                el.style.color = players[randomName].color;
-                
-                counter++;
-                if (counter > maxSpins) {
-                    clearInterval(interval);
-                    
-                    // Lógica REAL de selección (No repetir jugador anterior)
-                    let selectedName;
-                    do {
-                        selectedName = names[Math.floor(Math.random() * names.length)];
-                    } while (selectedName === lastPlayer && names.length > 1);
-                    
-                    lastPlayer = selectedName;
-                    currentPlayer = selectedName;
-                    
-                    // Mostrar resultado final visualmente
-                    el.innerText = currentPlayer;
-                    el.style.color = players[currentPlayer].color;
-                    
-                    setTimeout(startMission, 1000);
-                }
-            }, 100);
-        }
+            showScreen('screen-game');
+            nextWord();
 
-        function startMission() {
-            const pData = players[currentPlayer];
-            const taskObj = pData.tasks[Math.floor(Math.random() * pData.tasks.length)];
-            
-            document.getElementById('mission-player').innerText = currentPlayer;
-            document.getElementById('mission-player').style.color = pData.color;
-            document.getElementById('mission-text').innerText = taskObj.t;
-            
-            showScreen('screen-mission');
-            
-            // HABLAR
-            speak(`${currentPlayer}. ${taskObj.t}`);
-
-            // Timer
-            let timeLeft = taskObj.time;
-            const timerEl = document.getElementById('timer-display');
-            const btns = document.getElementById('action-buttons');
-            
-            timerEl.innerText = timeLeft;
-            timerEl.classList.remove('timer-warning');
-            btns.style.display = 'flex'; 
-
-            if(timerInterval) clearInterval(timerInterval);
-
+            if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(() => {
                 timeLeft--;
-                timerEl.innerText = timeLeft;
-                if(timeLeft > 0 && timeLeft <= 10) playTone('tick'); // Tictac solo al final
-
-                if (timeLeft <= 5) timerEl.classList.add('timer-warning');
+                document.getElementById('timer').innerText = timeLeft;
+                
+                if (timeLeft <= 10) {
+                    document.getElementById('timer').style.color = 'red';
+                    playSound('tick');
+                } else {
+                    document.getElementById('timer').style.color = 'white';
+                }
 
                 if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    timerEl.innerText = "¡TIEMPO!";
-                    playTone('alarm');
-                    speak("¡Se terminó el tiempo!");
-                    if(navigator.vibrate) navigator.vibrate(800);
+                    endRound();
                 }
             }, 1000);
         }
 
-        function missionResult(success) {
-            clearInterval(timerInterval);
-            if (success) {
-                scores[currentPlayer] += 100;
-                document.getElementById(`score-${currentPlayer.toLowerCase()}`).innerText = scores[currentPlayer];
-                speak("¡Muy bien!");
-            } else {
-                playTone('alarm');
-                speak("¡Oh no! Fallaste.");
-            }
+        function nextWord() {
+            // Elegir palabra que no se haya usado recién (simple random por ahora)
+            let newWord;
+            do {
+                newWord = dictionary[Math.floor(Math.random() * dictionary.length)];
+            } while (newWord.w === currentWord.w);
             
-            setTimeout(spinRoulette, 1500);
+            currentWord = newWord;
+            
+            // Animación de entrada
+            const textEl = document.getElementById('word-text');
+            const emojiEl = document.getElementById('word-emoji');
+            
+            textEl.classList.remove('pop-in');
+            void textEl.offsetWidth; // trigger reflow
+            textEl.innerText = currentWord.w;
+            emojiEl.innerText = currentWord.e;
+            textEl.classList.add('pop-in');
+        }
+
+        function handleAnswer(isCorrect) {
+            if (timeLeft <= 0) return;
+
+            if (isCorrect) {
+                playSound('correct');
+                currentRoundScore++;
+                // Flash verde visual
+                document.getElementById('card-display').style.background = '#a8e6cf';
+                setTimeout(() => document.getElementById('card-display').style.background = '#ecf0f1', 200);
+            } else {
+                playSound('pass');
+                // Flash rojo visual
+                document.getElementById('card-display').style.background = '#ff8b94';
+                setTimeout(() => document.getElementById('card-display').style.background = '#ecf0f1', 200);
+            }
+            nextWord();
+        }
+
+        function endRound() {
+            clearInterval(timerInterval);
+            playSound('end');
+            
+            // Actualizar puntajes
+            const player = players[currentPlayerIdx];
+            scores[player] += currentRoundScore;
+            
+            // Mostrar Pantalla Final
+            document.getElementById('round-score').innerText = currentRoundScore;
+            document.getElementById('total-edu').innerText = scores['EDU'];
+            document.getElementById('total-dani').innerText = scores['DANI'];
+            document.getElementById('total-vicky').innerText = scores['VICKY'];
+            
+            showScreen('screen-score');
+            
+            // Voz
+            const msg = new SpeechSynthesisUtterance(`Tiempo. Hiciste ${currentRoundScore} puntos.`);
+            msg.lang = 'es-ES';
+            window.speechSynthesis.speak(msg);
+
+            // Siguiente jugador
+            currentPlayerIdx++;
+            if (currentPlayerIdx >= players.length) currentPlayerIdx = 0;
         }
 
     </script>
