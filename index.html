@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Misión Caos: Familia</title>
+    <title>Misión Caos: Uruguay</title>
     <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@400;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --edu-color: #00d2ff;  /* Azul Neón */
             --dani-color: #ff0099; /* Rosa Neón */
             --vicky-color: #ffee00;/* Amarillo Neón */
-            --bg-dark: #0a0a0a;
-            --panel-bg: #1a1a1a;
+            --bg-dark: #121212;
         }
 
         * { box-sizing: border-box; touch-action: manipulation; }
@@ -32,7 +31,7 @@
         .screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
+            background: radial-gradient(circle, #222 0%, #000 100%);
             transition: opacity 0.5s;
             padding: 20px; text-align: center;
         }
@@ -43,11 +42,8 @@
         h1 {
             font-family: 'Black Ops One', cursive;
             font-size: 3rem; margin: 0;
-            text-transform: uppercase;
-            background: linear-gradient(to right, #ff0099, #00d2ff, #ffee00);
-            -webkit-background-clip: text;
-            color: transparent;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+            color: #fff;
+            text-shadow: 0 0 15px rgba(255,255,255,0.5);
             animation: pulseTitle 2s infinite;
         }
 
@@ -61,6 +57,8 @@
             font-size: 1.8rem; font-weight: 900;
             margin: 20px 0; line-height: 1.2;
             color: #fff;
+            min-height: 100px; /* Evita saltos de layout */
+            display: flex; align-items: center; justify-content: center;
         }
 
         /* --- TEMPORIZADOR --- */
@@ -104,9 +102,8 @@
         .score-box { text-align: center; font-weight: bold; }
         .score-box span { display: block; font-size: 1.5rem; font-family: 'Black Ops One'; }
         
-        /* --- ANIMACIONES --- */
         @keyframes pulseTitle { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 70% { transform: translate(3px, 1px) rotate(-1deg); } 80% { transform: translate(-1px, -1px) rotate(1deg); } 90% { transform: translate(1px, 2px) rotate(0deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
+        @keyframes shake { 0% { transform: translate(1px, 1px) rotate(0deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 100% { transform: translate(1px, -2px) rotate(-1deg); } }
 
     </style>
 </head>
@@ -120,9 +117,9 @@
 
     <div id="screen-start" class="screen active">
         <h1>MISIÓN<br>CAOS</h1>
-        <p style="font-size: 1.2rem; color: #aaa;">Edición Familia</p>
-        <div style="font-size: 4rem; margin: 20px;">👨‍👩‍👧</div>
-        <button class="btn-big" onclick="initGame()">¡ESTAMOS LISTOS!</button>
+        <p style="font-size: 1.2rem; color: #aaa;">Edición Uruguay</p>
+        <div style="font-size: 4rem; margin: 20px;">🇺🇾</div>
+        <button class="btn-big" onclick="initGame()">¡A JUGAR!</button>
     </div>
 
     <div id="screen-roulette" class="screen hidden">
@@ -132,115 +129,110 @@
 
     <div id="screen-mission" class="screen hidden">
         <div id="mission-player" class="player-name">EDU</div>
-        <div style="font-size: 1.2rem; color:#aaa; text-transform: uppercase;">Tu Misión es:</div>
-        <div id="mission-text" class="task-text">Correr al baño y traer papel</div>
+        <div style="font-size: 1.2rem; color:#aaa; text-transform: uppercase;">Misión:</div>
+        <div id="mission-text" class="task-text">...</div>
         
         <div id="timer-display">30</div>
 
         <div id="action-buttons" style="display:none; width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <button class="btn-big btn-success" onclick="missionResult(true)">¡LOGRADO! 😎</button>
-            <button class="btn-big btn-fail" onclick="missionResult(false)">FALLÉ 😭</button>
+            <button class="btn-big btn-success" onclick="missionResult(true)">¡LISTO! 😎</button>
+            <button class="btn-big btn-fail" onclick="missionResult(false)">NO LLEGUÉ 😭</button>
         </div>
     </div>
 
     <script>
-        // --- CONFIGURACIÓN DE PRENDAS ---
+        // --- CONFIGURACIÓN DE PRENDAS (SIN EJERCICIOS) ---
         const players = {
             'Edu': {
                 color: 'var(--edu-color)',
                 tasks: [
-                    { t: "¡Trae un rollo de papel higiénico del baño!", time: 25 },
-                    { t: "¡Tírate al piso y haz 10 abdominales!", time: 30 },
-                    { t: "¡Haz 10 flexiones de brazos!", time: 30 },
-                    { t: "Trae un tenedor de la cocina.", time: 20 },
-                    { t: "¡Baila 'Robot' sin música!", time: 15 },
-                    { t: "Haz la plancha (plank) sin moverte.", time: 20 },
-                    { t: "¡Trae un zapato tuyo!", time: 20 },
-                    { t: "Imita a un gorila enojado.", time: 15 }
+                    { t: "¡Trae el mate de la cocina!", time: 30 },
+                    { t: "¡Trae un rollo de papel higiénico!", time: 25 },
+                    { t: "¡Trae el control remoto de la tele!", time: 25 },
+                    { t: "¡Busca un par de medias (calcetines)!", time: 25 },
+                    { t: "¡Hacé una cara muy fea!", time: 10 },
+                    { t: "Canta una canción de cancha.", time: 20 },
+                    { t: "Trae un vaso con agua.", time: 30 },
+                    { t: "Imitá a un perro ladrando.", time: 10 }
                 ]
             },
             'Dani': {
                 color: 'var(--dani-color)',
                 tasks: [
-                    { t: "¡Trae una almohada del cuarto!", time: 25 },
-                    { t: "¡Haz 15 sentadillas rápido!", time: 30 },
-                    { t: "Trae algo de color ROJO.", time: 20 },
-                    { t: "¡Canta una canción de Disney a los gritos!", time: 20 },
-                    { t: "Haz el 'puente' en el piso.", time: 20 },
-                    { t: "Trae un vaso con agua (sin tirar).", time: 30 },
-                    { t: "Camina como una modelo por la sala.", time: 15 },
-                    { t: "¡Salta 10 veces con las rodillas al pecho!", time: 20 }
+                    { t: "¡Trae tu perfume favorito!", time: 30 },
+                    { t: "¡Busca una cuchara chica!", time: 25 },
+                    { t: "¡Trae un champión (zapatilla)!", time: 25 },
+                    { t: "¡Trae las llaves de la casa!", time: 30 },
+                    { t: "Dale un abrazo fuerte a Vicky.", time: 15 },
+                    { t: "Baila como una loca por 10 segundos.", time: 15 },
+                    { t: "Trae una fruta de la cocina.", time: 25 },
+                    { t: "Hacé como si estuvieras manejando un auto.", time: 15 }
                 ]
             },
             'Vicky': {
                 color: 'var(--vicky-color)',
                 tasks: [
-                    { t: "¡Corre y abraza a Mamá!", time: 10 },
-                    { t: "¡Corre y abraza a Papá!", time: 10 },
-                    { t: "¡Trae tu juguete favorito!", time: 30 },
-                    { t: "Salta en un pie 5 veces.", time: 15 },
-                    { t: "Gira como un trompo 3 veces.", time: 10 },
-                    { t: "Haz una mueca muy graciosa.", time: 10 },
-                    { t: "Camina como un zombie.", time: 15 },
-                    { t: "Toca el piso y salta al cielo 5 veces.", time: 20 },
-                    { t: "¡Hazte la dormida en el piso!", time: 10 }
+                    { t: "¡Trae tu peluche preferido!", time: 30 },
+                    { t: "¡Busca una almohada!", time: 30 },
+                    { t: "¡Trae un dibujo tuyo!", time: 40 },
+                    { t: "¡Tocale la nariz a Papá!", time: 15 },
+                    { t: "¡Tocale la oreja a Mamá!", time: 15 },
+                    { t: "Hacé ruido de león: ¡Grrr!", time: 10 },
+                    { t: "Saltá 5 veces bien alto.", time: 15 },
+                    { t: "Escondete atrás del sillón.", time: 15 },
+                    { t: "Trae una chinela (ojota).", time: 30 }
                 ]
             }
         };
 
         const scores = { 'Edu': 0, 'Dani': 0, 'Vicky': 0 };
         let currentPlayer = '';
+        let lastPlayer = ''; // Para evitar repeticiones
         let timerInterval;
         let audioCtx;
+        const synth = window.speechSynthesis; // Voz del navegador
 
         // --- SISTEMA DE AUDIO ---
         function initAudio() {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if(audioCtx.state === 'suspended') audioCtx.resume();
         }
 
         function playTone(type) {
             if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
             const now = audioCtx.currentTime;
 
             if(type === 'tick') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(800, now);
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.type = 'square'; osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.05, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
                 osc.start(now); osc.stop(now + 0.1);
             } else if (type === 'alarm') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(600, now);
-                osc.frequency.linearRampToValueAtTime(100, now + 0.5);
-                gain.gain.setValueAtTime(0.5, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.5);
-                osc.start(now); osc.stop(now + 0.5);
-            } else if (type === 'win') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(440, now); // A4
-                osc.frequency.setValueAtTime(880, now + 0.1); // A5
-                gain.gain.setValueAtTime(0.1, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.5);
+                osc.type = 'sawtooth'; osc.frequency.setValueAtTime(600, now); osc.frequency.linearRampToValueAtTime(100, now + 0.5);
+                gain.gain.setValueAtTime(0.3, now); gain.gain.linearRampToValueAtTime(0, now + 0.5);
                 osc.start(now); osc.stop(now + 0.5);
             } else if (type === 'spin') {
-                 osc.type = 'sine';
-                 osc.frequency.value = 200 + Math.random()*500;
-                 gain.gain.setValueAtTime(0.1, now);
-                 gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                 osc.type = 'sine'; osc.frequency.value = 200 + Math.random()*400;
+                 gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
                  osc.start(now); osc.stop(now + 0.1);
             }
+        }
+
+        function speak(text) {
+            if (synth.speaking) synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-ES'; // Intenta español genérico
+            utterance.rate = 1.0;
+            utterance.pitch = 1.1;
+            synth.speak(utterance);
         }
 
         // --- LÓGICA DEL JUEGO ---
         function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => {
-                s.classList.remove('active');
-                s.classList.add('hidden');
+                s.classList.remove('active'); s.classList.add('hidden');
             });
             document.getElementById(id).classList.remove('hidden');
             document.getElementById(id).classList.add('active');
@@ -248,6 +240,9 @@
 
         function initGame() {
             initAudio();
+            // Truco para despertar la voz en móviles (necesita interacción usuario)
+            const blank = new SpeechSynthesisUtterance('');
+            synth.speak(blank);
             spinRoulette();
         }
 
@@ -260,13 +255,30 @@
             
             const interval = setInterval(() => {
                 playTone('spin');
-                const randomName = names[Math.floor(Math.random() * names.length)];
+                let randomName;
+                
+                // Lógica visual de ruleta
+                randomName = names[Math.floor(Math.random() * names.length)];
                 el.innerText = randomName;
                 el.style.color = players[randomName].color;
+                
                 counter++;
                 if (counter > maxSpins) {
                     clearInterval(interval);
-                    currentPlayer = randomName;
+                    
+                    // Lógica REAL de selección (No repetir jugador anterior)
+                    let selectedName;
+                    do {
+                        selectedName = names[Math.floor(Math.random() * names.length)];
+                    } while (selectedName === lastPlayer && names.length > 1);
+                    
+                    lastPlayer = selectedName;
+                    currentPlayer = selectedName;
+                    
+                    // Mostrar resultado final visualmente
+                    el.innerText = currentPlayer;
+                    el.style.color = players[currentPlayer].color;
+                    
                     setTimeout(startMission, 1000);
                 }
             }, 100);
@@ -282,32 +294,33 @@
             
             showScreen('screen-mission');
             
-            // Iniciar Timer
+            // HABLAR
+            speak(`${currentPlayer}. ${taskObj.t}`);
+
+            // Timer
             let timeLeft = taskObj.time;
             const timerEl = document.getElementById('timer-display');
             const btns = document.getElementById('action-buttons');
             
             timerEl.innerText = timeLeft;
             timerEl.classList.remove('timer-warning');
-            btns.style.display = 'flex'; // Mostrar botones
+            btns.style.display = 'flex'; 
 
             if(timerInterval) clearInterval(timerInterval);
 
             timerInterval = setInterval(() => {
                 timeLeft--;
                 timerEl.innerText = timeLeft;
-                playTone('tick');
+                if(timeLeft > 0 && timeLeft <= 10) playTone('tick'); // Tictac solo al final
 
-                if (timeLeft <= 5) {
-                    timerEl.classList.add('timer-warning');
-                }
+                if (timeLeft <= 5) timerEl.classList.add('timer-warning');
 
                 if (timeLeft <= 0) {
                     clearInterval(timerInterval);
-                    timerEl.innerText = "¡BOOM!";
+                    timerEl.innerText = "¡TIEMPO!";
                     playTone('alarm');
-                    // Vibrar si es celular
-                    if(navigator.vibrate) navigator.vibrate(500);
+                    speak("¡Se terminó el tiempo!");
+                    if(navigator.vibrate) navigator.vibrate(800);
                 }
             }, 1000);
         }
@@ -315,14 +328,15 @@
         function missionResult(success) {
             clearInterval(timerInterval);
             if (success) {
-                playTone('win');
-                scores[currentPlayer] += 100; // 100 puntos por ganar
+                scores[currentPlayer] += 100;
                 document.getElementById(`score-${currentPlayer.toLowerCase()}`).innerText = scores[currentPlayer];
+                speak("¡Muy bien!");
             } else {
                 playTone('alarm');
+                speak("¡Oh no! Fallaste.");
             }
             
-            setTimeout(spinRoulette, 1000); // Volver a girar
+            setTimeout(spinRoulette, 1500);
         }
 
     </script>
