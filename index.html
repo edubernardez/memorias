@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Memory 3D</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-pink: #ff2a6d;
+            --neon-blue: #05d9e8;
+            --neon-green: #39ff14;
+            --bg-dark: #121212;
+            --card-bg: #1f293a;
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Fredoka One', cursive;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Canvas Background */
+        #bg-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.4;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 15px;
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            margin: 0;
+            font-size: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: white;
+            text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink);
+            animation: flicker 3s infinite alternate;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 10px;
+            font-size: 1.2rem;
+            text-shadow: 0 0 5px var(--neon-blue);
+        }
+
+        /* Menu Overlay */
+        #menu-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+
+        .btn {
+            background: transparent;
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 1.5rem;
+            font-family: 'Orbitron', sans-serif;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--neon-blue) inset, 0 0 20px var(--neon-blue);
+            transition: all 0.3s ease;
+            width: 250px;
+            text-align: center;
+        }
+
+        .btn:active { transform: scale(0.95); }
+        .btn:hover { background: var(--neon-blue); color: black; box-shadow: 0 0 40px var(--neon-blue); }
+
+        .btn-easy { --neon-color: var(--neon-green); border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px var(--neon-green) inset, 0 0 20px var(--neon-green); }
+        .btn-easy:hover { background: var(--neon-green); box-shadow: 0 0 40px var(--neon-green); }
+
+        .btn-hard { --neon-color: var(--neon-pink); border-color: var(--neon-pink); color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink) inset, 0 0 20px var(--neon-pink); }
+        .btn-hard:hover { background: var(--neon-pink); box-shadow: 0 0 40px var(--neon-pink); }
+
+        /* Game Board */
+        #game-board {
+            display: grid;
+            gap: 10px;
+            padding: 10px;
+            perspective: 1000px; /* Essential for 3D effect */
+            width: 100%;
+            max-width: 600px;
+            flex-grow: 1;
+            align-content: center;
+            justify-content: center;
+        }
+
+        /* Card Styles */
+        .card {
+            background-color: transparent;
+            width: 100%;
+            aspect-ratio: 1 / 1; /* Square cards */
+            perspective: 1000px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy flip */
+            transform-style: preserve-3d;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card.matched .card-inner {
+            box-shadow: 0 0 30px var(--neon-green);
+        }
+
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .card-front {
+            background: linear-gradient(145deg, #1f293a, #161b22);
+            font-size: 3rem;
+            color: rgba(255,255,255,0.2);
+        }
+
+        .card-front::after {
+            content: '?';
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+        }
+
+        .card-back {
+            background: linear-gradient(145deg, #2a3b55, #1f293a);
+            color: white;
+            transform: rotateY(180deg);
+            font-size: 3.5rem; /* Emoji size */
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue) inset;
+        }
+
+        /* Animations */
+        @keyframes flicker {
+            0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; text-shadow: 0 0 10px var(--neon-pink), 0 0 20px var(--neon-pink); }
+            20%, 24%, 55% { opacity: 0.5; text-shadow: none; }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        /* Modal Victory */
+        #victory-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(18, 18, 18, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid var(--neon-green);
+            box-shadow: 0 0 50px var(--neon-green);
+            text-align: center;
+            z-index: 200;
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        #victory-modal h2 {
+            font-size: 2.5rem;
+            color: var(--neon-green);
+            margin-bottom: 20px;
+        }
+
+        /* Responsive Grid Adjustments */
+        @media (max-width: 400px) {
+            h1 { font-size: 1.5rem; }
+            .card-back { font-size: 2.5rem; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <canvas id="bg-canvas"></canvas>
+
+    <header>
+        <h1>NEON MEMORY</h1>
+        <div class="stats">
+            <span id="moves">Movimientos: 0</span>
+            <span id="timer">Tiempo: 00:00</span>
+        </div>
+    </header>
+
+    <div id="game-board"></div>
+
+    <div id="menu-overlay">
+        <h1 style="font-size: 3rem; margin-bottom: 50px;">JUGAR</h1>
+        <button class="btn btn-easy" onclick="startGame('easy')">FÁCIL 😊</button>
+        <button class="btn" onclick="startGame('medium')">MEDIO 😎</button>
+        <button class="btn btn-hard" onclick="startGame('hard')">DIFÍCIL 🤯</button>
+    </div>
+
+    <div id="victory-modal">
+        <h2>¡GANASTE! 🎉</h2>
+        <p style="font-size: 1.2rem; margin-bottom: 20px;">¡Sos increíble!</p>
+        <button class="btn btn-easy" onclick="location.reload()">Jugar Otra Vez</button>
+    </div>
+
+    <script>
+        // --- 1. Audio System (Sintetizador Web Audio API) ---
+        // Genera sonidos sin necesidad de archivos externos mp3
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            if (type === 'flip') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+            } 
+            else if (type === 'match') {
+                // Sonido brillante y agudo "Ting!"
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+                
+                // Agregamos un segundo tono armónico
+                const osc2 = audioCtx.createOscillator();
+                const gain2 = audioCtx.createGain();
+                osc2.connect(gain2);
+                gain2.connect(audioCtx.destination);
+                osc2.type = 'sine';
+                osc2.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc2.start();
+                osc2.stop(audioCtx.currentTime + 0.3);
+            }
+            else if (type === 'win') {
+                // Acorde de victoria
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // Do Maj
+                notes.forEach((note, i) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.type = 'square';
+                    o.frequency.value = note;
+                    o.connect(g);
+                    g.connect(audioCtx.destination);
+                    g.gain.setValueAtTime(0, audioCtx.currentTime);
+                    g.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.1 + (i*0.1));
+                    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 2);
+                    o.start(audioCtx.currentTime + (i*0.05));
+                    o.stop(audioCtx.currentTime + 2);
+                });
+            }
+            else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.2);
+            }
+        }
+
+        // --- 2. Game Logic ---
+        
+        const emojis = ['🦄', '👽', '🍕', '🚀', '🐱', '🌈', '🍦', '💎', '🎮', '🦕', '⚡', '🎁'];
+        let gameGrid = [];
+        let firstCard = null;
+        let secondCard = null;
+        let lockBoard = false;
+        let moves = 0;
+        let matches = 0;
+        let totalPairs = 0;
+        let timerInterval;
+        let startTime;
+
+        const boardEl = document.getElementById('game-board');
+        const movesEl = document.getElementById('moves');
+        const timerEl = document.getElementById('timer');
+        const menuOverlay = document.getElementById('menu-overlay');
+
+        function startGame(difficulty) {
+            // Inicializar Audio
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            menuOverlay.style.opacity = '0';
+            setTimeout(() => menuOverlay.style.display = 'none', 500);
+
+            let rows, cols;
+            let numPairs;
+
+            // Configuración Dificultad
+            if (difficulty === 'easy') {
+                cols = 3; rows = 4; // 12 cartas (6 pares)
+            } else if (difficulty === 'medium') {
+                cols = 4; rows = 4; // 16 cartas (8 pares)
+            } else {
+                cols = 4; rows = 5; // 20 cartas (10 pares)
+            }
+
+            numPairs = (rows * cols) / 2;
+            totalPairs = numPairs;
+            
+            // Configurar Grid CSS
+            boardEl.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+            // Preparar Cartas
+            const selectedEmojis = emojis.slice(0, numPairs);
+            gameGrid = [...selectedEmojis, ...selectedEmojis];
+            gameGrid.sort(() => 0.5 - Math.random()); // Shuffle simple
+
+            // Renderizar
+            boardEl.innerHTML = '';
+            gameGrid.forEach(emoji => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                card.dataset.emoji = emoji;
+                
+                card.innerHTML = `
+                    <div class="card-inner">
+                        <div class="card-front"></div>
+                        <div class="card-back">${emoji}</div>
+                    </div>
+                `;
+                
+                card.addEventListener('click', flipCard);
+                boardEl.appendChild(card);
+            });
+
+            // Resetear Stats
+            moves = 0;
+            matches = 0;
+            movesEl.innerText = 'Movimientos: 0';
+            startTime = Date.now();
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const min = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const sec = String(elapsed % 60).padStart(2, '0');
+            timerEl.innerText = `Tiempo: ${min}:${sec}`;
+        }
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('flipped');
+            playSound('flip');
+
+            if (!firstCard) {
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            moves++;
+            movesEl.innerText = `Movimientos: ${moves}`;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            let isMatch = firstCard.dataset.emoji === secondCard.dataset.emoji;
+
+            if (isMatch) {
+                disableCards();
+            } else {
+                unflipCards();
+            }
+        }
+
+        function disableCards() {
+            firstCard.classList.add('matched');
+            secondCard.classList.add('matched');
+            playSound('match');
+            
+            matches++;
+            resetBoard();
+
+            if (matches === totalPairs) {
+                setTimeout(winGame, 500);
+            }
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+            setTimeout(() => {
+                playSound('error');
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+                resetBoard();
+            }, 1000);
+        }
+
+        function resetBoard() {
+            [lockBoard, firstCard, secondCard] = [false, null, null];
+        }
+
+        function winGame() {
+            clearInterval(timerInterval);
+            playSound('win');
+            startConfetti();
+            document.getElementById('victory-modal').style.display = 'block';
+        }
+
+        // --- 3. Particle Background System ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || Math.random() * canvas.height;
+                this.size = Math.random() * 3;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+                this.color = color || (Math.random() > 0.5 ? '#ff2a6d' : '#05d9e8');
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if(this.size > 0.1) this.size -= 0.01; // Desvanecer suavemente si es confeti
+                if(this.x < 0 || this.x > canvas.width) this.speedX *= -1;
+                if(this.y < 0 || this.y > canvas.height) this.speedY *= -1;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            for(let i=0; i<50; i++){
+                particles.push(new Particle());
+            }
+        }
+
+        function startConfetti() {
+            for(let i=0; i<100; i++){
+                particles.push(new Particle(canvas.width/2, canvas.height/2, Math.random() > 0.5 ? '#39ff14' : '#ff2a6d'));
+                particles[particles.length-1].speedX = (Math.random() - 0.5) * 10;
+                particles[particles.length-1].speedY = (Math.random() - 0.5) * 10;
+                particles[particles.length-1].size = Math.random() * 5 + 2;
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                // Remover partículas muy pequeñas (confeti viejo)
+                if (particles[i].size <= 0.1) {
+                    particles.splice(i, 1);
+                    i--;
+                }
+            }
+            // Mantener partículas de fondo constantes
+            while(particles.length < 50) {
+                 particles.push(new Particle());
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+
+    </script>
+</body>
+</html>
