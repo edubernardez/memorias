@@ -3,543 +3,540 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Neon Magic Arcade</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Orbitron:wght@500;900&display=swap" rel="stylesheet">
+    <title>La Aventura de las Manzanas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --neon-pink: #ff00ff;
-            --neon-blue: #00ffff;
-            --neon-green: #39ff14;
-            --neon-purple: #bc13fe;
-            --neon-yellow: #fff01f;
-            --bg-dark: #120520; /* Fondo violeta muy oscuro */
-            --glass-bg: rgba(255, 255, 255, 0.1);
+            --sky-top: #4facfe;
+            --sky-bottom: #00f2fe;
+            --grass: #43e97b;
+            --dirt: #38f9d7;
+            --ui-bg: rgba(255, 255, 255, 0.8);
         }
 
-        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
-        
         body {
-            margin: 0; padding: 0;
-            background-color: var(--bg-dark);
-            color: white;
-            font-family: 'Fredoka One', cursive; /* Fuente más amable */
+            margin: 0;
             overflow: hidden;
+            background: linear-gradient(to bottom, var(--sky-top), var(--sky-bottom));
+            font-family: 'Fredoka One', cursive;
+            touch-action: none; /* Previene zoom y scroll en móviles */
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw;
             height: 100vh;
+            overflow: hidden;
+        }
+
+        /* UI Overlay */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none; /* Deja pasar los clicks al juego */
+            z-index: 10;
+        }
+
+        .hud-panel {
+            background: rgba(255,255,255,0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            font-size: 1.2rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .heart { color: #ff4757; }
+        .apple-icon { color: #ff6b81; }
+
+        /* Pantallas (Menú, Game Over, Win) */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            color: white;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            transition: opacity 0.5s;
         }
 
-        /* Canvas de Fondo (Partículas Mágicas) */
-        #bg-canvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; opacity: 0.5;
+        .hidden { display: none !important; }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: #ffd700;
+            text-shadow: 0 5px 0 #d35400;
+            letter-spacing: 2px;
         }
 
-        /* --- PANTALLAS --- */
-        .screen-container {
-            display: none;
-            flex-direction: column;
-            height: 100%;
-            width: 100%;
-            animation: slideIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-        }
-        .screen-container.active { display: flex; }
-
-        @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-        /* HEADER COMÚN */
-        header {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 15px; background: rgba(0,0,0,0.3); backdrop-filter: blur(5px);
-            z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        h1 { margin: 0; font-family: 'Orbitron', sans-serif; font-size: 1.5rem; letter-spacing: 1px; }
-
-        .back-btn {
-            background: rgba(255,255,255,0.1); border: 1px solid white; color: white;
-            padding: 8px 15px; border-radius: 20px; cursor: pointer; font-family: 'Fredoka One';
+        p.story {
+            font-family: 'Nunito', sans-serif;
+            font-size: 1.2rem;
+            max-width: 80%;
+            line-height: 1.5;
+            margin-bottom: 30px;
         }
 
-        /* --- MENÚ PRINCIPAL --- */
-        #main-menu { justify-content: center; align-items: center; text-align: center; gap: 30px; }
-        #main-menu h1 {
-            font-size: 3rem; color: var(--neon-pink);
-            text-shadow: 0 0 20px var(--neon-pink), 0 0 60px var(--neon-purple);
-            margin-bottom: 20px;
-        }
-
-        .menu-card {
-            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
-            border: 2px solid var(--neon-blue);
-            padding: 20px; width: 85%; max-width: 350px; border-radius: 20px;
-            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
-            display: flex; align-items: center; gap: 20px;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
-        }
-        
-        .menu-card:active { transform: scale(0.95); }
-        
-        .menu-icon { font-size: 3.5rem; filter: drop-shadow(0 0 10px rgba(255,255,255,0.5)); }
-        .menu-text h2 { margin: 0; font-size: 1.4rem; color: white; text-align: left; }
-        .menu-text p { margin: 5px 0 0 0; font-size: 0.9rem; color: #aaa; text-align: left; font-family: sans-serif; }
-
-        /* Estilo especial para la tarjeta de Uñas */
-        .menu-card.nails-theme { border-color: var(--neon-pink); box-shadow: 0 0 15px rgba(255, 0, 255, 0.2); }
-        .menu-card.nails-theme h2 { color: var(--neon-pink); }
-
-        #start-audio-btn {
-            padding: 10px 20px; background: var(--neon-green); border: none; border-radius: 50px;
-            color: #000; font-weight: bold; cursor: pointer; animation: pulse 1s infinite;
-        }
-
-        /* --- JUEGO 1: MEMORIA --- */
-        #memory-board {
-            display: grid; gap: 8px; padding: 15px;
-            margin: auto; max-width: 500px; width: 100%;
-            perspective: 1000px; align-content: center;
-        }
-        .card { position: relative; width: 100%; aspect-ratio: 1; cursor: pointer; }
-        .card-inner {
-            width: 100%; height: 100%; transition: transform 0.4s; transform-style: preserve-3d;
-            border-radius: 10px; position: relative;
-        }
-        .card.flipped .card-inner { transform: rotateY(180deg); }
-        .card-front, .card-back {
-            position: absolute; width: 100%; height: 100%; backface-visibility: hidden;
-            display: flex; align-items: center; justify-content: center; border-radius: 10px;
-        }
-        .card-front { background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.1); font-size: 2rem; }
-        .card-back {
-            background: #2a1b3d; border: 2px solid var(--neon-blue); transform: rotateY(180deg);
-            font-size: 2.2rem; box-shadow: 0 0 15px var(--neon-blue);
-        }
-        /* Ajuste para modo extremo (cartas chicas) */
-        .grid-6x6 .card-back { font-size: 1.2rem; border-width: 1px; }
-
-        #diff-overlay {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(18, 5, 32, 0.95); z-index: 50;
-            display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px;
-        }
-        .btn-game {
-            background: transparent; border: 2px solid white; color: white;
-            padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; width: 250px;
-            font-family: 'Fredoka One'; cursor: pointer;
-        }
-        .btn-neon-blue { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 10px var(--neon-blue); }
-        .btn-neon-pink { border-color: var(--neon-pink); color: var(--neon-pink); box-shadow: 0 0 10px var(--neon-pink); }
-        
-        /* --- JUEGO 2: SALÓN DE UÑAS --- */
-        #salon-container {
-            flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: space-between;
-            padding-bottom: 20px;
-        }
-
-        #hand-area {
-            flex-grow: 1; width: 100%; display: flex; justify-content: center; align-items: center;
-            position: relative;
-        }
-
-        /* La Mano CSS */
-        .hand {
-            display: flex; gap: 15px; transform: rotate(-5deg);
-        }
-        .finger {
-            width: 50px; height: 180px;
-            background: linear-gradient(to bottom, #ffdbac, #e0b084);
-            border-radius: 40px; position: relative;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
-            display: flex; justify-content: center;
-        }
-        .finger:nth-child(1) { height: 140px; margin-top: 40px; } /* Meñique */
-        .finger:nth-child(2) { height: 160px; margin-top: 20px; } /* Anular */
-        .finger:nth-child(3) { height: 180px; margin-top: 0px; }  /* Medio */
-        .finger:nth-child(4) { height: 160px; margin-top: 20px; } /* Indice */
-        .finger:nth-child(5) { height: 130px; margin-top: 60px; transform: rotate(10deg); margin-left: 10px; } /* Pulgar */
-
-        .nail {
-            width: 36px; height: 45px;
-            background-color: #ffeadd; /* Color natural */
-            border-radius: 15px 15px 5px 5px;
-            margin-top: 10px;
+        button.btn-start {
+            background: linear-gradient(to bottom, #ff9f43, #ee5253);
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.5rem;
+            color: white;
+            font-family: 'Fredoka One', cursive;
+            border-radius: 50px;
             cursor: pointer;
-            transition: transform 0.1s;
-            position: relative;
-            overflow: hidden;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        .nail:active { transform: scale(0.9); }
-        
-        .sticker-on-nail {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 1.5rem; pointer-events: none;
+            box-shadow: 0 10px 0 #b33939, 0 10px 20px rgba(0,0,0,0.4);
+            transition: transform 0.1s, box-shadow 0.1s;
         }
 
-        /* Controles de Pintura */
-        #tools-panel {
-            background: rgba(255,255,255,0.1);
-            backdrop-filter: blur(10px);
-            width: 95%; border-radius: 20px; padding: 15px;
-            display: flex; flex-direction: column; gap: 10px;
+        button.btn-start:active {
+            transform: translateY(5px);
+            box-shadow: 0 5px 0 #b33939;
         }
 
-        .tool-row { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
-        
-        .color-swatch {
-            width: 50px; height: 50px; border-radius: 50%; flex-shrink: 0;
-            border: 3px solid transparent; cursor: pointer;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+        /* Canvas */
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
         }
-        .color-swatch.selected { border-color: white; transform: scale(1.1); }
 
-        .sticker-option {
-            font-size: 2rem; padding: 5px; background: rgba(255,255,255,0.1);
-            border-radius: 10px; cursor: pointer; min-width: 50px; text-align: center;
-            border: 2px solid transparent;
+        /* Animación de tutorial */
+        .tutorial-hint {
+            position: absolute;
+            bottom: 20%;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            animation: bounce 2s infinite;
+            pointer-events: none;
         }
-        .sticker-option.selected { border-color: var(--neon-yellow); background: rgba(255,255,255,0.2); }
 
-        .tool-label { font-size: 0.8rem; color: #ccc; margin-left: 5px; text-transform: uppercase; letter-spacing: 1px; }
-
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
     </style>
 </head>
 <body>
-    <canvas id="bg-canvas"></canvas>
 
-    <div id="main-menu" class="screen-container active">
-        <div>
-            <h1>NEON<br>MAGIC</h1>
-            <button id="start-audio-btn" onclick="initAudio()">ACTIVAR SONIDO ✨</button>
-        </div>
-
-        <div class="menu-card" onclick="enterGame('memory')">
-            <div class="menu-icon">🧠</div>
-            <div class="menu-text">
-                <h2>Memoria Mágica</h2>
-                <p>¡Entrena tu cerebro!</p>
+    <div id="game-container">
+        <div id="ui-layer" class="hidden">
+            <div class="hud-panel">
+                <span class="apple-icon">🍎</span> <span id="score-display">0 / 10</span>
+            </div>
+            <div class="hud-panel">
+                Nivel <span id="level-display" style="margin-left:5px">1</span>
+            </div>
+            <div class="hud-panel">
+                <span class="heart" id="lives-display">❤️❤️❤️</span>
             </div>
         </div>
 
-        <div class="menu-card nails-theme" onclick="enterGame('salon')">
-            <div class="menu-icon">💅</div>
-            <div class="menu-text">
-                <h2>Salón de Uñas</h2>
-                <p>Pinta y decora con unicornios</p>
-            </div>
+        <div id="start-screen" class="screen">
+            <h1>LA AVENTURA<br>DEL MANZANO</h1>
+            <p class="story">
+                ¡Hola! Ayuda a la niña a recoger manzanas mágicas.<br>
+                Salta para agarrarlas y evita a los gusanos gruñones.<br>
+                <br>
+                ⭐ Toca 1 vez para saltar.<br>
+                ⭐⭐ Toca 2 veces para saltar más alto.
+            </p>
+            <button class="btn-start" onclick="initGame()">¡JUGAR!</button>
         </div>
-    </div>
 
-    <div id="memory-game" class="screen-container">
-        <header>
-            <button class="back-btn" onclick="goBack()">⬅ Volver</button>
-            <h1>MEMORIA</h1>
-            <div style="width:50px"></div>
-        </header>
-        <div id="memory-board"></div>
-        
-        <div id="diff-overlay">
-            <h2 style="color:white; margin-bottom: 20px;">ELIGE TU RETO</h2>
-            <button class="btn-game btn-neon-blue" onclick="startMemory('medium')">Normal (16)</button>
-            <button class="btn-game btn-neon-pink" onclick="startMemory('extreme')">DEMENTE (36)</button>
+        <div id="level-screen" class="screen hidden">
+            <h1 style="color: #43e97b;">¡MUY BIEN!</h1>
+            <p class="story" id="level-msg">Nivel completado.</p>
+            <button class="btn-start" onclick="nextLevel()">Siguiente Nivel ➡</button>
         </div>
-    </div>
 
-    <div id="salon-game" class="screen-container">
-        <header>
-            <button class="back-btn" onclick="goBack()">⬅ Volver</button>
-            <h1 style="color: var(--neon-pink);">SALÓN DE UÑAS</h1>
-            <button class="back-btn" onclick="cleanNails()" style="border-color: var(--neon-yellow); color: var(--neon-yellow);">Limpiar</button>
-        </header>
-
-        <div id="salon-container">
-            <div id="hand-area">
-                <div class="hand">
-                    <div class="finger"><div class="nail" onclick="paintNail(this)"></div></div>
-                    <div class="finger"><div class="nail" onclick="paintNail(this)"></div></div>
-                    <div class="finger"><div class="nail" onclick="paintNail(this)"></div></div>
-                    <div class="finger"><div class="nail" onclick="paintNail(this)"></div></div>
-                    <div class="finger"><div class="nail" onclick="paintNail(this)"></div></div>
-                </div>
-            </div>
-
-            <div id="tools-panel">
-                <div class="tool-label">1. Elige Color Neon</div>
-                <div class="tool-row" id="color-palette">
-                    </div>
-                
-                <div class="tool-label" style="margin-top: 10px;">2. Elige Sticker</div>
-                <div class="tool-row" id="sticker-palette">
-                    <div class="sticker-option" onclick="selectSticker(null)">🚫</div>
-                    <div class="sticker-option" onclick="selectSticker('🦄')">🦄</div>
-                    <div class="sticker-option" onclick="selectSticker('🌈')">🌈</div>
-                    <div class="sticker-option" onclick="selectSticker('⭐')">⭐</div>
-                    <div class="sticker-option" onclick="selectSticker('💖')">💖</div>
-                    <div class="sticker-option" onclick="selectSticker('🦋')">🦋</div>
-                    <div class="sticker-option" onclick="selectSticker('💎')">💎</div>
-                </div>
-            </div>
+        <div id="gameover-screen" class="screen hidden">
+            <h1 style="color: #ff4757;">¡OH NO!</h1>
+            <p class="story">Los bichos te han atrapado.</p>
+            <button class="btn-start" onclick="restartGame()">Intentar de Nuevo ↺</button>
         </div>
+
+        <div id="win-screen" class="screen hidden">
+            <h1>¡GANASTE! 🏆</h1>
+            <p class="story">¡Juntaste todas las manzanas y hiciste el pastel más rico del mundo!</p>
+            <button class="btn-start" onclick="location.reload()">Jugar Otra Vez</button>
+        </div>
+
+        <div id="tutorial" class="tutorial-hint hidden">Tocá la pantalla para saltar</div>
+
+        <canvas id="gameCanvas"></canvas>
     </div>
 
     <script>
-        // ==========================================
-        // --- AUDIO MAGICO (Web Audio API) ---
-        // ==========================================
+        // --- MOTOR DE AUDIO ---
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        function initAudio() {
-            if(audioCtx.state === 'suspended') audioCtx.resume();
-            document.getElementById('start-audio-btn').style.display = 'none';
-            playSound('sparkle');
-        }
-
         function playSound(type) {
-            if(audioCtx.state === 'suspended') return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.connect(gain); gain.connect(audioCtx.destination);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
 
-            const curr = audioCtx.currentTime;
+            const now = audioCtx.currentTime;
 
-            if (type === 'pop') { // Sonido burbuja suave
+            if (type === 'jump') {
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, curr);
-                osc.frequency.exponentialRampToValueAtTime(800, curr + 0.1);
-                gain.gain.setValueAtTime(0.5, curr);
-                gain.gain.exponentialRampToValueAtTime(0.01, curr + 0.1);
-                osc.start(curr); osc.stop(curr + 0.1);
-            } 
-            else if (type === 'sparkle') { // Sonido mágico
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(500, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'collect') {
                 osc.type = 'triangle';
-                // Arpegio rápido
-                [523, 659, 784, 1046, 1318].forEach((freq, i) => {
-                    const o = audioCtx.createOscillator();
-                    const g = audioCtx.createGain();
+                osc.frequency.setValueAtTime(1000, now);
+                osc.frequency.setValueAtTime(1500, now + 0.1);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                osc.start(now); osc.stop(now + 0.2);
+            } else if (type === 'hit') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.exponentialRampToValueAtTime(50, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                osc.start(now); osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                osc.type = 'square';
+                // Melodia simple
+                [523, 659, 784, 1046].forEach((f, i) => {
+                    let o = audioCtx.createOscillator();
+                    let g = audioCtx.createGain();
                     o.connect(g); g.connect(audioCtx.destination);
-                    o.type = 'sine';
-                    o.frequency.value = freq;
-                    g.gain.setValueAtTime(0.05, curr + i*0.05);
-                    g.gain.exponentialRampToValueAtTime(0.001, curr + i*0.05 + 0.3);
-                    o.start(curr + i*0.05); o.stop(curr + i*0.05 + 0.3);
+                    o.frequency.value = f;
+                    g.gain.setValueAtTime(0.1, now + i*0.1);
+                    g.gain.exponentialRampToValueAtTime(0.001, now + i*0.1 + 0.4);
+                    o.start(now + i*0.1); o.stop(now + i*0.1 + 0.4);
                 });
             }
-            else if (type === 'paint') { // Sonido "whoosh" suave
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(200, curr);
-                osc.frequency.linearRampToValueAtTime(100, curr + 0.2);
-                gain.gain.setValueAtTime(0.3, curr);
-                gain.gain.linearRampToValueAtTime(0, curr + 0.2);
-                osc.start(curr); osc.stop(curr + 0.2);
-            }
-            else if (type === 'win') { // Acorde mayor
-                 [523.25, 659.25, 783.99].forEach((f,i) => {
-                    const o = audioCtx.createOscillator();
-                    const g = audioCtx.createGain();
-                    o.connect(g); g.connect(audioCtx.destination);
-                    o.type = 'triangle';
-                    o.frequency.value = f;
-                    g.gain.setValueAtTime(0.1, curr);
-                    g.gain.exponentialRampToValueAtTime(0.001, curr+1.5);
-                    o.start(curr); o.stop(curr+1.5);
-                 });
-            }
         }
 
-        // ==========================================
-        // --- NAVEGACION ---
-        // ==========================================
-        function enterGame(game) {
-            document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active'));
-            if(game === 'memory') {
-                document.getElementById('memory-game').classList.add('active');
-                document.getElementById('diff-overlay').style.display = 'flex';
-                document.getElementById('memory-board').innerHTML = '';
-            } else {
-                document.getElementById('salon-game').classList.add('active');
-                initSalon();
-            }
-            playSound('sparkle');
-        }
-
-        function goBack() {
-            document.querySelectorAll('.screen-container').forEach(s => s.classList.remove('active'));
-            document.getElementById('main-menu').classList.add('active');
-        }
-
-        // ==========================================
-        // --- JUEGO 1: MEMORIA ---
-        // ==========================================
-        const emojis = ['🦄','🌈','🍭','🍦','👑','🦋','🐱','🍄','⭐','🌙','🍒','🎀','🧸','🎨','🎪','🧩','🎾','🎸'];
-        let memState = { first: null, second: null, locked: false, matches: 0, total: 0 };
-
-        function startMemory(diff) {
-            document.getElementById('diff-overlay').style.display = 'none';
-            const board = document.getElementById('memory-board');
-            let cols = 4, rows = 4;
-            
-            board.className = ''; 
-            if(diff === 'extreme') {
-                cols = 6; rows = 6;
-                board.classList.add('grid-6x6');
-                board.style.gridTemplateColumns = `repeat(6, 1fr)`;
-            } else {
-                board.style.gridTemplateColumns = `repeat(4, 1fr)`;
-            }
-
-            memState = { first: null, second: null, locked: false, matches: 0, total: (cols*rows)/2 };
-            
-            const selection = emojis.slice(0, memState.total);
-            const deck = [...selection, ...selection].sort(() => 0.5 - Math.random());
-            
-            board.innerHTML = '';
-            deck.forEach(e => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `<div class="card-inner"><div class="card-front">?</div><div class="card-back">${e}</div></div>`;
-                card.onclick = () => flipCard(card, e);
-                board.appendChild(card);
-            });
-        }
-
-        function flipCard(card, val) {
-            if(memState.locked || card === memState.first || card.classList.contains('flipped')) return;
-            
-            card.classList.add('flipped');
-            playSound('pop');
-
-            if(!memState.first) {
-                memState.first = card;
-                memState.firstVal = val;
-            } else {
-                memState.second = card;
-                if(memState.firstVal === val) {
-                    // Match
-                    playSound('sparkle');
-                    memState.first = null; memState.second = null;
-                    memState.matches++;
-                    if(memState.matches === memState.total) setTimeout(() => playSound('win'), 500);
-                } else {
-                    memState.locked = true;
-                    setTimeout(() => {
-                        memState.first.classList.remove('flipped');
-                        memState.second.classList.remove('flipped');
-                        memState.first = null; memState.second = null;
-                        memState.locked = false;
-                    }, 1000);
-                }
-            }
-        }
-
-        // ==========================================
-        // --- JUEGO 2: SALÓN DE UÑAS ---
-        // ==========================================
-        let currentPaint = '#ff00ff';
-        let currentSticker = null;
-
-        function initSalon() {
-            const palette = document.getElementById('color-palette');
-            palette.innerHTML = '';
-            const colors = ['#ff00ff', '#00ffff', '#39ff14', '#bc13fe', '#fff01f', '#ff0055', '#ffffff', '#000000'];
-            
-            colors.forEach(c => {
-                const swatch = document.createElement('div');
-                swatch.className = 'color-swatch';
-                swatch.style.backgroundColor = c;
-                swatch.style.boxShadow = `0 0 10px ${c}`;
-                swatch.onclick = () => selectColor(c, swatch);
-                palette.appendChild(swatch);
-            });
-            // Select default
-            selectColor(colors[0], palette.children[0]);
-        }
-
-        function selectColor(color, el) {
-            currentPaint = color;
-            currentSticker = null; // Si elige color, desactiva sticker
-            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
-            el.classList.add('selected');
-            document.querySelectorAll('.sticker-option').forEach(s => s.classList.remove('selected'));
-            playSound('pop');
-        }
-
-        function selectSticker(sticker) {
-            currentSticker = sticker;
-            document.querySelectorAll('.sticker-option').forEach(s => s.classList.remove('selected'));
-            // Highlight sticker button logic could go here
-            if(sticker) playSound('pop');
-        }
-
-        function paintNail(nail) {
-            if(currentSticker) {
-                // Poner sticker
-                // Limpiar stickers viejos si quieres solo uno, o añadir multiples
-                // Vamos a poner solo uno central para simpleza
-                nail.innerHTML = `<div class="sticker-on-nail">${currentSticker}</div>`;
-                playSound('pop');
-            } else {
-                // Pintar color
-                nail.style.backgroundColor = currentPaint;
-                nail.style.boxShadow = `0 0 15px ${currentPaint}, inset 0 0 10px rgba(0,0,0,0.2)`;
-                playSound('paint');
-            }
-            
-            // Animacion pequeña
-            nail.style.transform = 'scale(0.9)';
-            setTimeout(() => nail.style.transform = 'scale(1)', 100);
-        }
-
-        function cleanNails() {
-            document.querySelectorAll('.nail').forEach(n => {
-                n.style.backgroundColor = '#ffeadd';
-                n.style.boxShadow = 'inset 0 0 5px rgba(0,0,0,0.2)';
-                n.innerHTML = '';
-            });
-            playSound('paint');
-        }
-
-        // ==========================================
-        // --- FONDO DE PARTÍCULAS ---
-        // ==========================================
-        const canvas = document.getElementById('bg-canvas');
+        // --- LÓGICA DEL JUEGO ---
+        const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resizeCanvas); resizeCanvas();
         
-        let particles = [];
-        class Particle {
-            constructor() {
-                this.x = Math.random() * canvas.width;
-                this.y = Math.random() * canvas.height;
-                this.size = Math.random() * 3;
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.speedY = (Math.random() - 0.5) * 0.5;
-                this.color = Math.random() > 0.5 ? '#ff00ff' : '#00ffff';
-            }
-            update() {
-                this.x += this.speedX; this.y += this.speedY;
-                if(this.x < 0) this.x = canvas.width;
-                if(this.x > canvas.width) this.x = 0;
-                if(this.y < 0) this.y = canvas.height;
-                if(this.y > canvas.height) this.y = 0;
-            }
-            draw() {
-                ctx.fillStyle = this.color; ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
-            }
-        }
-        
-        function animate() {
-            ctx.clearRect(0,0,canvas.width,canvas.height);
-            while(particles.length < 50) particles.push(new Particle());
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
-        }
-        animate();
+        let width, height;
+        let animationId;
+        let gameRunning = false;
+        let frames = 0;
 
+        // Configuración de Juego
+        const gameState = {
+            level: 1,
+            applesCollected: 0,
+            lives: 3,
+            goal: 5,
+            enemySpeed: 3
+        };
+
+        // Entidades
+        const player = {
+            x: 50,
+            y: 0,
+            width: 60,
+            height: 80,
+            dy: 0,
+            jumpPower: -18,
+            gravity: 0.9,
+            grounded: false,
+            doubleJump: false,
+            emoji: '👧'
+        };
+
+        let apples = [];
+        let enemies = [];
+        let particles = [];
+        let groundHeight = 100;
+
+        // Niveles
+        const levels = [
+            { goal: 5, enemySpeed: 4, msg: "Nivel 1: El Jardín Amanece", enemyType: '🐛', spawnRate: 200 },
+            { goal: 10, enemySpeed: 6, msg: "Nivel 2: Gusanos Rápidos", enemyType: '🐛', spawnRate: 150 },
+            { goal: 15, enemySpeed: 7, msg: "Nivel 3: ¡Cuidado con las Arañas!", enemyType: '🕷️', spawnRate: 120 }
+        ];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            groundHeight = height - 100;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Input
+        function handleJump(e) {
+            if (!gameRunning) return;
+            // e.preventDefault(); // Evitar comportamientos extraños
+            
+            if (player.grounded) {
+                player.dy = player.jumpPower;
+                player.grounded = false;
+                player.doubleJump = true;
+                playSound('jump');
+            } else if (player.doubleJump) {
+                player.dy = player.jumpPower * 0.8;
+                player.doubleJump = false;
+                playSound('jump');
+                // Efecto particula salto doble
+                createParticles(player.x + player.width/2, player.y + player.height, '#fff', 5);
+            }
+        }
+
+        window.addEventListener('touchstart', handleJump);
+        window.addEventListener('mousedown', handleJump);
+        window.addEventListener('keydown', (e) => { if(e.code === 'Space') handleJump() });
+
+        function initGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('ui-layer').classList.remove('hidden');
+            document.getElementById('tutorial').classList.remove('hidden');
+            gameState.level = 1;
+            gameState.lives = 3;
+            startLevel(1);
+        }
+
+        function startLevel(lvl) {
+            const config = levels[lvl - 1];
+            gameState.level = lvl;
+            gameState.goal = config.goal;
+            gameState.applesCollected = 0;
+            gameState.enemySpeed = config.enemySpeed;
+            
+            // Reset Entidades
+            apples = [];
+            enemies = [];
+            particles = [];
+            player.y = groundHeight - player.height;
+            player.dy = 0;
+            
+            updateHUD();
+            
+            gameRunning = true;
+            loop();
+
+            setTimeout(() => document.getElementById('tutorial').classList.add('hidden'), 3000);
+        }
+
+        function nextLevel() {
+            document.getElementById('level-screen').classList.add('hidden');
+            if (gameState.level >= levels.length) {
+                document.getElementById('win-screen').classList.remove('hidden');
+                document.getElementById('ui-layer').classList.add('hidden');
+                playSound('win');
+            } else {
+                startLevel(gameState.level + 1);
+            }
+        }
+
+        function restartGame() {
+            document.getElementById('gameover-screen').classList.add('hidden');
+            gameState.lives = 3;
+            startLevel(1);
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').innerText = `${gameState.applesCollected} / ${gameState.goal}`;
+            document.getElementById('level-display').innerText = gameState.level;
+            document.getElementById('lives-display').innerText = '❤️'.repeat(gameState.lives);
+        }
+
+        function createParticles(x, y, color, count) {
+            for(let i=0; i<count; i++) {
+                particles.push({
+                    x: x, y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 1.0,
+                    color: color
+                });
+            }
+        }
+
+        function spawnApple() {
+            // Manzanas aparecen a diferentes alturas
+            const isHigh = Math.random() > 0.5;
+            const yPos = isHigh ? groundHeight - 200 : groundHeight - 120; // Alta o Baja
+            apples.push({
+                x: width,
+                y: yPos,
+                size: 40,
+                speed: 4 // La escena se mueve hacia la izquierda
+            });
+        }
+
+        function spawnEnemy() {
+            const config = levels[gameState.level - 1];
+            enemies.push({
+                x: width,
+                y: groundHeight - 50, // En el suelo
+                width: 50,
+                height: 50,
+                speed: config.enemySpeed + Math.random(),
+                emoji: config.enemyType
+            });
+        }
+
+        function checkCollision(rect1, rect2) {
+            return (rect1.x < rect2.x + rect2.width &&
+                    rect1.x + rect1.width > rect2.x &&
+                    rect1.y < rect2.y + rect2.height &&
+                    rect1.y + rect1.height > rect2.y);
+        }
+
+        function loop() {
+            if (!gameRunning) return;
+            animationId = requestAnimationFrame(loop);
+            ctx.clearRect(0, 0, width, height);
+            frames++;
+
+            const levelConfig = levels[gameState.level - 1];
+
+            // 1. Dibujar Fondo (Árboles Parallax Simple)
+            // Tronco
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(100, 0, 100, height); 
+            // Hojas
+            ctx.fillStyle = '#2ecc71';
+            ctx.beginPath();
+            ctx.arc(150, 100, 200, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Suelo
+            ctx.fillStyle = '#43e97b';
+            ctx.fillRect(0, groundHeight, width, height - groundHeight);
+            // Linea decorativa suelo
+            ctx.strokeStyle = '#27ae60';
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.moveTo(0, groundHeight);
+            ctx.lineTo(width, groundHeight);
+            ctx.stroke();
+
+            // 2. Física Jugador
+            player.dy += player.gravity;
+            player.y += player.dy;
+
+            if (player.y + player.height > groundHeight) {
+                player.y = groundHeight - player.height;
+                player.dy = 0;
+                player.grounded = true;
+            }
+
+            // Dibujar Jugador
+            ctx.font = '60px Arial';
+            ctx.textAlign = 'center';
+            // Efecto de rebote al saltar
+            let bounceY = player.grounded ? 0 : -5;
+            ctx.fillText(player.emoji, player.x + player.width/2, player.y + player.height + bounceY);
+
+            // 3. Gestionar Manzanas
+            // Spawn
+            if (frames % 100 === 0) spawnApple();
+
+            for (let i = apples.length - 1; i >= 0; i--) {
+                let a = apples[i];
+                a.x -= a.speed;
+
+                // Dibujar Manzana
+                ctx.font = '40px Arial';
+                ctx.fillText('🍎', a.x + 20, a.y + 30);
+                
+                // Colisión (Círculo simple)
+                let dx = (player.x + player.width/2) - (a.x + 20);
+                let dy = (player.y + player.height/2) - (a.y + 30);
+                let distance = Math.sqrt(dx*dx + dy*dy);
+
+                if (distance < 50) {
+                    // Recogida
+                    playSound('collect');
+                    createParticles(a.x, a.y, '#ff6b81', 10);
+                    apples.splice(i, 1);
+                    gameState.applesCollected++;
+                    updateHUD();
+
+                    if (gameState.applesCollected >= gameState.goal) {
+                        gameRunning = false;
+                        document.getElementById('level-msg').innerText = `¡Bien hecho! Recogiste ${gameState.goal} manzanas.`;
+                        document.getElementById('level-screen').classList.remove('hidden');
+                        playSound('win');
+                    }
+                    continue;
+                }
+
+                if (a.x < -50) apples.splice(i, 1);
+            }
+
+            // 4. Gestionar Enemigos
+            // Spawn aleatorio
+            if (frames % levelConfig.spawnRate === 0) spawnEnemy();
+
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let e = enemies[i];
+                e.x -= e.speed;
+
+                // Dibujar Enemigo
+                ctx.font = '50px Arial';
+                ctx.fillText(e.emoji, e.x + 25, e.y + 45);
+
+                // Colisión (Caja)
+                if (checkCollision(player, {x: e.x, y: e.y, width: 40, height: 40})) {
+                    playSound('hit');
+                    createParticles(player.x, player.y, '#ff0000', 15);
+                    enemies.splice(i, 1);
+                    gameState.lives--;
+                    updateHUD();
+
+                    if (gameState.lives <= 0) {
+                        gameRunning = false;
+                        document.getElementById('gameover-screen').classList.remove('hidden');
+                    }
+                    continue;
+                }
+
+                if (e.x < -50) enemies.splice(i, 1);
+            }
+
+            // 5. Particulas
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.05;
+                
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+        }
     </script>
 </body>
 </html>
